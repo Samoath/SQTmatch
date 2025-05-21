@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-title" content="Feature Match" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Feature Match: Match the benefits to the customer</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f5c0bf;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      color: #bb3a2a;
+      text-align: center;
+    }
+    #game-board {
+      display: grid;
+      grid-template-columns: repeat(4, 160px);
+      justify-items: center;
+      grid-gap: 20px;
+      margin-top: 20px;
+    }
+    .card {
+      width: 160px;
+      height: 140px;
+      background-color: #ff7b67;
+      border-radius: 12px;
+      cursor: pointer;
+      position: relative;
+      perspective: 1000px;
+      border: 2px solid white;
+    }
+    .card-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      text-align: center;
+      transition: transform 0.6s;
+      transform-style: preserve-3d;
+    }
+    .card.flipped .card-inner {
+      transform: rotateY(180deg);
+      cursor: default;
+    }
+    .card-front,
+    .card-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 12px;
+      backface-visibility: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      padding: 10px;
+      box-sizing: border-box;
+      color: white;
+    }
+    .card-front {
+      background-color: #ff7b67;
+      border: 2px solid white;
+    }
+    .card-front img {
+      max-width: 100px;
+      max-height: 40px;
+      object-fit: contain;
+    }
+    .card-back {
+  background-color: #ff7b67;
+  border: 2px solid white;
+  transform: rotateY(180deg);
+  font-size: 12px;
+  line-height: 1.3;
+  text-align: center;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* center horizontally */
+  justify-content: flex-start; /* align items to top vertically */
+
+  padding: 10px 8px;
+  box-sizing: border-box;
+  color: white;
+  height: 100%;
+}
+
+.card-back img {
+    .smaller img {
+      transform: scale(0.4);
+    }
+  width: 100%;      /* full width */
+  height: auto;     /* automatic height */
+  max-height: 35%;  /* limit height to 60% of the card */
+  object-fit: contain;
+  margin: 0 0 8px 0; /* margin bottom for spacing text */
+  border-radius: 8px;
+  flex-shrink: 0;    /* prevent shrinking */
+}
+
+.card-back {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: flex-start !important;
+  align-items: center !important;
+
+  padding: 10px 8px !important;
+  box-sizing: border-box !important;
+  height: 100% !important;
+  background-color: #ff7b67 !important;
+  border: 2px solid white !important;
+  color: white !important;
+  font-size: 12px !important;
+  line-height: 1.3 !important;
+  text-align: center !important;
+  transform: rotateY(180deg) !important;
+}
+
+    #reset-btn {
+      margin-top: 30px;
+      padding: 10px 20px;
+      background-color: #bb3a2a;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    #message {
+      margin-top: 20px;
+      font-size: 20px;
+      color: green;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <h1>Feature Match: Match the benefits to the customer</h1>
+  <div id="game-board"></div>
+  <button id="reset-btn">Restart Game</button>
+  <div id="message"></div>
+
+  <script>
+    const smallerImages = ['ndr2.png', 'wwc2.png', 'acc2.png', 'scr2.png', 'lat2.png', 'ext2.png'];
+    const pairsData = [
+      {
+        pairId: 1,
+        front: { text: "Next day replacement", img: "assets/ndr1.png" },
+        back: { text: "Jess is a beautician who uses her phone to book and check her customer's appointments", img: "assets/ndr2.png" }
+      },
+      {
+        pairId: 2,
+        front: { text: "Worldwide cover", img: "assets/wwc1.png" },
+        back: { text: "Sarah loves travelling, when travelling her phone is her bank card and her boarding pass", img: "assets/wwc2.png" }
+      },
+      {
+        pairId: 3,
+        front: { text: "£300 of accessories included when purchased at the same time", img: "assets/acc1.png" },
+        back: { text: "Pete is always on the go, and is always wearing his Apple watch and Airpods", img: "assets/acc2.png" }
+      },
+      {
+        pairId: 4,
+        front: { text: "Unlimited £25 screen replacements", img: "assets/scr1.png" },
+        back: { text: "George's 5 year old son loves watching YouTube videos on George's phone and iPad", img: "assets/scr2.png" }
+      },
+      {
+        pairId: 5,
+        front: { text: "Loss and theft cover", img: "assets/lat1.png" },
+        back: { text: "Harry is a delivery driver and his work often takes him to different cities including London", img: "assets/lat2.png" }
+      },
+      {
+        pairId: 6,
+        front: { text: "Extended warranty", img: "assets/ext1.png" },
+        back: { text: "Paula shops in store because she likes peace of mind, she wants to keep her phone for as long as possible", img: "assets/ext2.png" }
+      }
+    ];
+
+    let cards = [];
+    let flippedCards = [];
+    let matchedPairs = 0;
+    const totalPairs = pairsData.length;
+    const gameBoard = document.getElementById('game-board');
+    const message = document.getElementById('message');
+    const resetBtn = document.getElementById('reset-btn');
+
+    function prepareCards() {
+      let tempCards = [];
+      pairsData.forEach(pair => {
+        tempCards.push({ pairId: pair.pairId, text: pair.front.text, img: pair.front.img });
+        tempCards.push({ pairId: pair.pairId, text: pair.back.text, img: pair.back.img });
+      });
+      return shuffle(tempCards);
+    }
+
+    function shuffle(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+
+    function createCardElement(cardData, index) {
+      const card = document.createElement('div');
+      card.classList.add('card');
+      card.dataset.pairId = cardData.pairId;
+      card.dataset.index = index;
+
+      const isSmaller = smallerImages.includes(cardData.img.split('/').pop());
+      const backClass = isSmaller ? 'card-back smaller' : 'card-back';
+
+      card.innerHTML = `
+        <div class="card-inner">
+          <div class="card-front">
+            <img src="assets/logo.png" alt="Logo">
+          </div>
+          <div class="${backClass}">
+            <img src="${cardData.img}" alt="${cardData.text}" />
+            <div>${cardData.text}</div>
+          </div>
+        </div>
+      `;
+
+      card.addEventListener('click', () => flipCard(card));
+      return card;
+    }
+
+    function flipCard(card) {
+      if (flippedCards.length === 2 || card.classList.contains('flipped')) return;
+      card.classList.add('flipped');
+      flippedCards.push(card);
+
+      if (flippedCards.length === 2) {
+        checkMatch();
+      }
+    }
+
+    function checkMatch() {
+      const [card1, card2] = flippedCards;
+      if (card1.dataset.pairId === card2.dataset.pairId) {
+        matchedPairs++;
+        flippedCards = [];
+        if (matchedPairs === totalPairs) {
+          message.textContent = "🎉 Congratulations! You found all pairs!";
+        }
+      } else {
+        setTimeout(() => {
+          card1.classList.remove('flipped');
+          card2.classList.remove('flipped');
+          flippedCards = [];
+        }, 1200);
+      }
+    }
+
+    function setupGame() {
+      matchedPairs = 0;
+      message.textContent = "";
+      gameBoard.innerHTML = "";
+      cards = prepareCards();
+      cards.forEach((cardData, index) => {
+        const card = createCardElement(cardData, index);
+        gameBoard.appendChild(card);
+      });
+    }
+
+    resetBtn.addEventListener('click', setupGame);
+    setupGame();
+  </script>
+</body>
+</html>
