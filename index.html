@@ -3,9 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+
+  <!-- iOS support -->
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="Feature Match" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+
+  <!-- Android support -->
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#bb3a2a" />
+
   <title>Feature Match: Match the benefits to the customer</title>
   <style>
     body {
@@ -18,7 +25,6 @@
       min-height: 100vh;
       margin: 0;
       padding: 20px;
-      text-align: center;
     }
     h1 {
       color: #000000;
@@ -85,14 +91,14 @@
       font-size: 12px;
       line-height: 1.3;
       text-align: center;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      padding: 10px 8px;
-      box-sizing: border-box;
-      color: white;
-      height: 100%;
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: flex-start !important;
+      align-items: center !important;
+      padding: 10px 8px !important;
+      box-sizing: border-box !important;
+      height: 100% !important;
+      color: white !important;
     }
     .card-back img {
       width: 100%;
@@ -103,8 +109,8 @@
       border-radius: 8px;
       flex-shrink: 0;
     }
-    #reset-btn {
-      margin-top: 30px;
+    #reset-btn, #show-leaderboard-btn {
+      margin-top: 20px;
       padding: 10px 20px;
       background-color: #000000;
       color: white;
@@ -112,6 +118,7 @@
       border-radius: 6px;
       font-size: 16px;
       cursor: pointer;
+      margin-right: 10px;
     }
     #message {
       margin-top: 20px;
@@ -119,31 +126,74 @@
       color: green;
       text-align: center;
     }
-    #stats {
-      margin-top: 15px;
-      font-size: 18px;
-      font-weight: bold;
+    #timer-moves {
+      margin-top: 10px;
+      font-size: 16px;
+      color: #333;
+      text-align: center;
     }
-    #submit-form {
+    #submit-score-form {
       margin-top: 20px;
       display: none;
       flex-direction: column;
       align-items: center;
     }
-    #submit-form input {
+    #submit-score-form input {
       padding: 8px;
-      margin: 5px 0;
-      font-size: 16px;
-      width: 200px;
+      margin: 5px;
       border-radius: 4px;
       border: 1px solid #ccc;
+      width: 200px;
+      font-size: 14px;
     }
-    #submit-form button {
-      padding: 10px 20px;
+    #submit-score-form button {
       margin-top: 10px;
+      padding: 8px 20px;
       font-size: 16px;
-      background-color: #000000;
+      background-color: #000;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    /* Leaderboard modal */
+    #leaderboard-modal {
+      display: none;
+      position: fixed;
+      top: 10%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.3);
+      max-width: 90vw;
+      max-height: 80vh;
+      overflow-y: auto;
+      z-index: 9999;
+    }
+    #leaderboard-modal h2 {
+      margin-top: 0;
+    }
+    #leaderboard-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    #leaderboard-table th, #leaderboard-table td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: center;
+    }
+    #leaderboard-table th {
+      background-color: #ff7b67;
       color: white;
+    }
+    #close-leaderboard-btn {
+      margin-top: 10px;
+      padding: 8px 20px;
+      font-size: 16px;
+      background-color: #000;
+      color: #fff;
       border: none;
       border-radius: 6px;
       cursor: pointer;
@@ -152,17 +202,36 @@
 </head>
 <body>
   <h1>Feature Match: Match the benefits to the customer</h1>
-  <div id="stats">Moves: 0 | Time: 0s</div>
+
+  <div id="timer-moves">Time: 0 s | Moves: 0</div>
+
   <div id="game-board"></div>
-  <button id="reset-btn">Restart Game</button>
+
+  <div>
+    <button id="reset-btn">Restart Game</button>
+    <button id="show-leaderboard-btn">Show Leaderboard</button>
+  </div>
+
   <div id="message"></div>
 
-  <form id="submit-form">
-    <h2>Submit your score</h2>
-    <input type="text" id="playerName" placeholder="Your Name" required />
-    <input type="text" id="storeName" placeholder="Store Name" required />
+  <form id="submit-score-form">
+    <input type="text" id="player-name" placeholder="Your Name" required />
+    <input type="text" id="store-name" placeholder="Store Name" required />
     <button type="submit">Submit Score</button>
   </form>
+
+  <div id="leaderboard-modal">
+    <h2>Top 10 Leaderboard</h2>
+    <table id="leaderboard-table">
+      <thead>
+        <tr>
+          <th>#</th><th>Name</th><th>Store</th><th>Moves</th><th>Time (s)</th><th>Points</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <button id="close-leaderboard-btn">Close</button>
+  </div>
 
   <script>
     const smallerImages = ['ndr2.png', 'wwc2.png', 'acc2.png', 'scr2.png', 'lat2.png', 'ext2.png'];
@@ -203,26 +272,23 @@
     let flippedCards = [];
     let matchedPairs = 0;
     const totalPairs = pairsData.length;
+
     const gameBoard = document.getElementById('game-board');
     const message = document.getElementById('message');
     const resetBtn = document.getElementById('reset-btn');
-    const stats = document.getElementById('stats');
-    const submitForm = document.getElementById('submit-form');
-    const playerNameInput = document.getElementById('playerName');
-    const storeNameInput = document.getElementById('storeName');
+    const timerMovesDisplay = document.getElementById('timer-moves');
+    const submitForm = document.getElementById('submit-score-form');
+    const playerNameInput = document.getElementById('player-name');
+    const storeNameInput = document.getElementById('store-name');
+    const showLeaderboardBtn = document.getElementById('show-leaderboard-btn');
+    const leaderboardModal = document.getElementById('leaderboard-modal');
+    const leaderboardTableBody = document.querySelector('#leaderboard-table tbody');
+    const closeLeaderboardBtn = document.getElementById('close-leaderboard-btn');
 
     let moves = 0;
-    let startTime = null;
+    let timer = 0;
     let timerInterval = null;
-
-    function prepareCards() {
-      let tempCards = [];
-      pairsData.forEach(pair => {
-        tempCards.push({ pairId: pair.pairId, text: pair.front.text, img: pair.front.img });
-        tempCards.push({ pairId: pair.pairId, text: pair.back.text, img: pair.back.img });
-      });
-      return shuffle(tempCards);
-    }
+    let gameStarted = false;
 
     function shuffle(array) {
       for (let i = array.length - 1; i > 0; i--) {
@@ -232,154 +298,212 @@
       return array;
     }
 
-    function createCardElement(cardData, index) {
+    function createCards() {
+      cards = [];
+      pairsData.forEach(pair => {
+        cards.push({ ...pair.front, pairId: pair.pairId, type: 'front' });
+        cards.push({ ...pair.back, pairId: pair.pairId, type: 'back' });
+      });
+      shuffle(cards);
+    }
+
+    function createCardElement(cardData) {
       const card = document.createElement('div');
       card.classList.add('card');
       card.dataset.pairId = cardData.pairId;
-      card.dataset.index = index;
+      card.dataset.type = cardData.type;
 
-      const isSmaller = smallerImages.includes(cardData.img.split('/').pop());
-      const backClass = isSmaller ? 'card-back smaller' : 'card-back';
+      const cardInner = document.createElement('div');
+      cardInner.classList.add('card-inner');
 
-      card.innerHTML = `
-        <div class="card-inner">
-          <div class="card-front">
-            <img src="assets/logo.png" alt="Logo">
-          </div>
-          <div class="${backClass}">
-            <img src="${cardData.img}" alt="${cardData.text}" />
-            <div>${cardData.text}</div>
-          </div>
-        </div>
-      `;
+      const front = document.createElement('div');
+      front.classList.add('card-front');
+      if (cardData.img) {
+        const img = document.createElement('img');
+        img.src = cardData.img;
+        img.alt = cardData.text;
+        front.appendChild(img);
+      }
+      const frontText = document.createElement('div');
+      frontText.textContent = cardData.text;
+      front.appendChild(frontText);
 
-      card.addEventListener('click', () => flipCard(card));
+      const back = document.createElement('div');
+      back.classList.add('card-back');
+      if (cardData.img && smallerImages.includes(cardData.img.split('/').pop())) {
+        // Smaller back image
+        const img = document.createElement('img');
+        img.src = cardData.img;
+        img.alt = cardData.text;
+        back.appendChild(img);
+      }
+      const backText = document.createElement('div');
+      backText.textContent = cardData.text;
+      back.appendChild(backText);
+
+      cardInner.appendChild(front);
+      cardInner.appendChild(back);
+      card.appendChild(cardInner);
+
+      card.addEventListener('click', () => handleCardClick(card));
+
       return card;
     }
 
-    function flipCard(card) {
+    function handleCardClick(card) {
       if (flippedCards.length === 2 || card.classList.contains('flipped')) return;
 
-      if (startTime === null) {
+      if (!gameStarted) {
         startTimer();
+        gameStarted = true;
       }
 
       card.classList.add('flipped');
       flippedCards.push(card);
 
-      moves++;
-      updateStats();
-
       if (flippedCards.length === 2) {
-        checkMatch();
-      }
-    }
-
-    function checkMatch() {
-      const [card1, card2] = flippedCards;
-      if (card1.dataset.pairId === card2.dataset.pairId) {
-        matchedPairs++;
-        flippedCards = [];
-
-        if (matchedPairs === totalPairs) {
-          stopTimer();
-          message.textContent = "🎉 Congratulations! You matched all customers to their insurance needs!";
-          showSubmitForm();
-        }
-      } else {
-        setTimeout(() => {
-          card1.classList.remove('flipped');
-          card2.classList.remove('flipped');
+        moves++;
+        updateTimerMoves();
+        const [card1, card2] = flippedCards;
+        if (
+          card1.dataset.pairId === card2.dataset.pairId &&
+          card1.dataset.type !== card2.dataset.type
+        ) {
+          matchedPairs++;
           flippedCards = [];
-        }, 1200);
+          if (matchedPairs === totalPairs) {
+            endGame();
+          }
+        } else {
+          setTimeout(() => {
+            card1.classList.remove('flipped');
+            card2.classList.remove('flipped');
+            flippedCards = [];
+          }, 1200);
+        }
       }
     }
 
-    function setupGame() {
-      matchedPairs = 0;
-      moves = 0;
-      startTime = null;
-      clearInterval(timerInterval);
-      timerInterval = null;
-      message.textContent = "";
-      submitForm.style.display = 'none';
-      playerNameInput.value = '';
-      storeNameInput.value = '';
-      stats.textContent = `Moves: 0 | Time: 0s`;
-      gameBoard.innerHTML = "";
-      cards = prepareCards();
-      cards.forEach((cardData, index) => {
-        const card = createCardElement(cardData, index);
-        gameBoard.appendChild(card);
-      });
-    }
-
-    function updateStats() {
-      const elapsed = startTime ? Math.floor((Date.now() - startTime) / 1000) : 0;
-      stats.textContent = `Moves: ${moves} | Time: ${elapsed}s`;
+    function updateTimerMoves() {
+      timerMovesDisplay.textContent = `Time: ${timer} s | Moves: ${moves}`;
     }
 
     function startTimer() {
-      startTime = Date.now();
-      timerInterval = setInterval(updateStats, 1000);
+      timerInterval = setInterval(() => {
+        timer++;
+        updateTimerMoves();
+      }, 1000);
     }
 
     function stopTimer() {
       clearInterval(timerInterval);
-      timerInterval = null;
     }
 
-    function showSubmitForm() {
-      submitForm.style.display = 'flex';
+    function resetGame() {
+      stopTimer();
+      timer = 0;
+      moves = 0;
+      gameStarted = false;
+      matchedPairs = 0;
+      updateTimerMoves();
+      message.textContent = '';
+      submitForm.style.display = 'none';
+      playerNameInput.value = '';
+      storeNameInput.value = '';
+      gameBoard.innerHTML = '';
+      createCards();
+      cards.forEach(cardData => {
+        const cardElement = createCardElement(cardData);
+        gameBoard.appendChild(cardElement);
+      });
     }
 
-    // Points calculation: base 1000 - (moves * 10) - (time in seconds * 5), min 0 points
     function calculatePoints(moves, time) {
-      const points = Math.max(0, 1000 - (moves * 10) - (time * 5));
+      // Simple example: max 100 points - 2 points per move - 1 point per second, min 0
+      let points = 100 - moves * 2 - time;
+      if (points < 0) points = 0;
       return points;
     }
 
-    submitForm.addEventListener('submit', (e) => {
+    function endGame() {
+      stopTimer();
+      message.textContent = `You completed the game in ${timer} seconds with ${moves} moves!`;
+      submitForm.style.display = 'flex';
+    }
+
+    submitForm.addEventListener('submit', e => {
       e.preventDefault();
+      const name = playerNameInput.value.trim();
+      const store = storeNameInput.value.trim();
 
-      const playerName = playerNameInput.value.trim();
-      const storeName = storeNameInput.value.trim();
-      const elapsed = Math.floor((Date.now() - startTime) / 1000);
-
-      if (!playerName || !storeName) {
-        alert('Please enter your name and store.');
+      if (!name || !store) {
+        alert('Please enter both your name and store.');
         return;
       }
 
-      const points = calculatePoints(moves, elapsed);
+      const points = calculatePoints(moves, timer);
 
-      // Replace this with your actual Google Apps Script Web App URL:
+      const data = {
+        name,
+        store,
+        moves,
+        time: timer,
+        points,
+      };
+
+      // Replace this with your actual Apps Script Web App URL
       const scriptURL = 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec';
 
       fetch(scriptURL, {
         method: 'POST',
         mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: playerName,
-          store: storeName,
-          moves: moves,
-          time: elapsed,
-          points: points
-        })
-      })
-        .then(() => {
-          message.textContent = `Thanks, ${playerName}! Your score of ${points} points has been submitted.`;
-          submitForm.style.display = 'none';
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      }).then(() => {
+        message.textContent = `Thanks ${name}! Your score has been submitted.`;
+        submitForm.style.display = 'none';
+      }).catch(() => {
+        alert('Error submitting score. Please try again.');
+      });
+    });
+
+    showLeaderboardBtn.addEventListener('click', () => {
+      // Replace with your Google Apps Script Web App URL (same as for submit)
+      const scriptURL = https://script.google.com/macros/s/AKfycbwegOLFu7OblOk8Qge7TJ9FxHyuxzoAyI9HZ7DFWCV6a0vqFtKaD02KUsJx20bEDDC9KA/exec;
+
+      fetch(scriptURL)
+        .then(response => response.json())
+        .then(data => {
+          leaderboardTableBody.innerHTML = ''; // Clear old rows
+          data.forEach((entry, index) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td>${index + 1}</td>
+              <td>${entry.name}</td>
+              <td>${entry.store}</td>
+              <td>${entry.moves}</td>
+              <td>${entry.time}</td>
+              <td>${entry.points}</td>
+            `;
+            leaderboardTableBody.appendChild(row);
+          });
+          leaderboardModal.style.display = 'block';
         })
         .catch(() => {
-          alert('Oops! There was an error submitting your score.');
+          alert('Could not load leaderboard. Please try again later.');
         });
     });
 
-    resetBtn.addEventListener('click', setupGame);
+    closeLeaderboardBtn.addEventListener('click', () => {
+      leaderboardModal.style.display = 'none';
+    });
 
-    setupGame();
+    resetBtn.addEventListener('click', resetGame);
+
+    // Initialize game on load
+    resetGame();
   </script>
 </body>
 </html>
