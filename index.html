@@ -387,33 +387,32 @@
     function sendScore(name, store, timer, moves, points) {
   console.log("Submitting score:", { name, store, timer, moves, points });
 
-  fetch(WEB_APP_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      name: name,
-      store: store,
-      timer: timer,
-      moves: moves,
-      points: points
-    })
+ fetch(WEB_APP_URL, {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    name: name,
+    store: store,
+    time: timer,   // Make sure this key matches what your Apps Script expects
+    moves: moves,
+    points: points
   })
-  .then(response => {
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    return response.json();
-  })
-  .then(data => {
-    console.log('Score submission response:', data);
+})
+.then(response => response.json())
+.then(data => {
+  if (data.status === 'success') {
     alert('Score submitted!');
-  })
-  .catch(error => {
-    console.error('Failed to submit score:', error);
-    alert('Failed to submit score.');
-  });
+  } else {
+    alert('Submission error: ' + data.message);
+  }
+})
+.catch(err => {
+  console.error('Failed to submit score:', err);
+  alert('Failed to submit score');
+});
+
 }
 
     function showLeaderboard() {
