@@ -374,42 +374,47 @@
 
     function showSubmitForm() {
       const playerName = prompt("Congrats! Enter your name for the leaderboard:");
-      if (!playerName || playerName.trim() === "") return;
+      if (!name || name.trim() === "") return;
 
       const storeName = prompt("Enter your Store name:");
-      if (!storeName || storeName.trim() === "") return;
+      if (!store || store.trim() === "") return;
 
       const points = calculatePoints(timer, moves);
 
-      sendScore(playerName.trim(), storeName.trim(), timer, moves, points);
+      sendScore(name.trim(), store.trim(), timer, moves, points);
     }
 
-    function sendScore(Name, Store, Time, Moves, Points) {
-     fetch(WEB_APP_URL, {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  body: JSON.stringify({
-    name: playerName,
-    store: playerStore,
-    time: timeTaken,
-    moves: moveCount,
-    points: points
+    function sendScore(name, store, timer, moves, points) {
+  console.log("Submitting score:", { name, store, timer, moves, points });
+
+  fetch(WEB_APP_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      name: name,
+      store: store,
+      timer: time,
+      moves: moves,
+      points: points
+    })
   })
-})
-.then(response => response.json())
-.then(data => {
-  if (data.status === 'success') {
-    console.log('Score submitted successfully!');
-  } else {
-    console.error('Submit error:', data.message);
-  }
-})
-.catch(error => {
-  console.error('Failed to submit score:', error);
-});
+  .then(response => {
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
+    return response.json();
+  })
+  .then(data => {
+    console.log('Score submission response:', data);
+    alert('Score submitted!');
+  })
+  .catch(error => {
+    console.error('Failed to submit score:', error);
+    alert('Failed to submit score.');
+  });
+}
 
     function showLeaderboard() {
       fetch(WEB_APP_URL)
