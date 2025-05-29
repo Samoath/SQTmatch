@@ -373,16 +373,16 @@
     }
 
     function showSubmitForm() {
-      const playerName = prompt("Congrats! Enter your name for the leaderboard:");
-      if (!name || name.trim() === "") return;
+  const playerName = prompt("Congrats! Enter your name for the leaderboard:");
+  if (!playerName || playerName.trim() === "") return;
 
-      const storeName = prompt("Enter your Store name:");
-      if (!store || store.trim() === "") return;
+  const storeName = prompt("Enter your Store name:");
+  if (!storeName || storeName.trim() === "") return;
 
-      const points = calculatePoints(timer, moves);
+  const points = calculatePoints(timer, moves);
 
-      sendScore(name.trim(), store.trim(), timer, moves, points);
-    }
+  sendScore(playerName.trim(), storeName.trim(), timer, moves, points);
+}
 
     function sendScore(name, store, timer, moves, points) {
   console.log("Submitting score:", { name, store, timer, moves, points });
@@ -395,7 +395,7 @@
     body: JSON.stringify({
       name: name,
       store: store,
-      time: timer,
+      timer: timer,
       moves: moves,
       points: points
     })
