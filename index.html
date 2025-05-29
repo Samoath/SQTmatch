@@ -13,7 +13,11 @@
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="theme-color" content="#bb3a2a" />
 
+  <!-- Manifest -->
+  <link rel="manifest" href="manifest.json" />
+
   <title>Feature Match: Match the benefits to the customer</title>
+
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -91,14 +95,14 @@
       font-size: 12px;
       line-height: 1.3;
       text-align: center;
-      display: flex !important;
-      flex-direction: column !important;
-      justify-content: flex-start !important;
-      align-items: center !important;
-      padding: 10px 8px !important;
-      box-sizing: border-box !important;
-      height: 100% !important;
-      color: white !important;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 10px 8px;
+      box-sizing: border-box;
+      color: white;
+      height: 100%;
     }
     .card-back img {
       width: 100%;
@@ -109,8 +113,8 @@
       border-radius: 8px;
       flex-shrink: 0;
     }
-    #reset-btn, #show-leaderboard-btn {
-      margin-top: 20px;
+    #reset-btn, #submit-btn, #leaderboard-btn {
+      margin-top: 15px;
       padding: 10px 20px;
       background-color: #000000;
       color: white;
@@ -125,112 +129,73 @@
       font-size: 20px;
       color: green;
       text-align: center;
+      min-height: 28px;
     }
-    #timer-moves {
+    #status-bar {
       margin-top: 10px;
       font-size: 16px;
       color: #333;
-      text-align: center;
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      flex-wrap: wrap;
     }
-    #submit-score-form {
-      margin-top: 20px;
-      display: none;
-      flex-direction: column;
-      align-items: center;
-    }
-    #submit-score-form input {
-      padding: 8px;
-      margin: 5px;
-      border-radius: 4px;
-      border: 1px solid #ccc;
-      width: 200px;
-      font-size: 14px;
-    }
-    #submit-score-form button {
-      margin-top: 10px;
-      padding: 8px 20px;
-      font-size: 16px;
-      background-color: #000;
-      color: #fff;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    /* Leaderboard modal */
-    #leaderboard-modal {
-      display: none;
+    /* Modal styles */
+    #modal {
       position: fixed;
-      top: 10%;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #fff;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    #modal-content {
+      background: white;
       padding: 20px;
       border-radius: 10px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.3);
-      max-width: 90vw;
-      max-height: 80vh;
+      max-width: 90%;
+      max-height: 80%;
       overflow-y: auto;
-      z-index: 9999;
+      box-sizing: border-box;
     }
-    #leaderboard-modal h2 {
-      margin-top: 0;
-    }
-    #leaderboard-table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    #leaderboard-table th, #leaderboard-table td {
-      border: 1px solid #ddd;
-      padding: 8px;
-      text-align: center;
-    }
-    #leaderboard-table th {
-      background-color: #ff7b67;
-      color: white;
-    }
-    #close-leaderboard-btn {
-      margin-top: 10px;
-      padding: 8px 20px;
-      font-size: 16px;
-      background-color: #000;
-      color: #fff;
-      border: none;
-      border-radius: 6px;
+    #modal-close {
+      float: right;
       cursor: pointer;
+      font-weight: bold;
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+    ol {
+      padding-left: 20px;
     }
   </style>
 </head>
 <body>
   <h1>Feature Match: Match the benefits to the customer</h1>
 
-  <div id="timer-moves">Time: 0 s | Moves: 0</div>
+  <div id="status-bar">
+    <div>Time: <span id="timer">0</span> seconds</div>
+    <div>Moves: <span id="moves">0</span></div>
+  </div>
 
   <div id="game-board"></div>
 
   <div>
     <button id="reset-btn">Restart Game</button>
-    <button id="show-leaderboard-btn">Show Leaderboard</button>
+    <button id="submit-btn" disabled>Submit Score</button>
+    <button id="leaderboard-btn">Show Leaderboard</button>
   </div>
 
   <div id="message"></div>
 
-  <form id="submit-score-form">
-    <input type="text" id="player-name" placeholder="Your Name" required />
-    <input type="text" id="store-name" placeholder="Store Name" required />
-    <button type="submit">Submit Score</button>
-  </form>
-
-  <div id="leaderboard-modal">
-    <h2>Top 10 Leaderboard</h2>
-    <table id="leaderboard-table">
-      <thead>
-        <tr>
-          <th>#</th><th>Name</th><th>Store</th><th>Moves</th><th>Time (s)</th><th>Points</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-    <button id="close-leaderboard-btn">Close</button>
+  <!-- Modal for Leaderboard -->
+  <div id="modal">
+    <div id="modal-content">
+      <div id="modal-close">&times;</div>
+      <div id="modal-body"></div>
+    </div>
   </div>
 
   <script>
@@ -272,23 +237,30 @@
     let flippedCards = [];
     let matchedPairs = 0;
     const totalPairs = pairsData.length;
-
     const gameBoard = document.getElementById('game-board');
     const message = document.getElementById('message');
     const resetBtn = document.getElementById('reset-btn');
-    const timerMovesDisplay = document.getElementById('timer-moves');
-    const submitForm = document.getElementById('submit-score-form');
-    const playerNameInput = document.getElementById('player-name');
-    const storeNameInput = document.getElementById('store-name');
-    const showLeaderboardBtn = document.getElementById('show-leaderboard-btn');
-    const leaderboardModal = document.getElementById('leaderboard-modal');
-    const leaderboardTableBody = document.querySelector('#leaderboard-table tbody');
-    const closeLeaderboardBtn = document.getElementById('close-leaderboard-btn');
+    const submitBtn = document.getElementById('submit-btn');
+    const leaderboardBtn = document.getElementById('leaderboard-btn');
+    const timerSpan = document.getElementById('timer');
+    const movesSpan = document.getElementById('moves');
 
-    let moves = 0;
     let timer = 0;
     let timerInterval = null;
+    let moves = 0;
     let gameStarted = false;
+
+    // Your deployed Google Apps Script Web App URL here:
+    const WEB_APP_URL = 'YOUR_WEB_APP_URL_HERE';
+
+    function prepareCards() {
+      let tempCards = [];
+      pairsData.forEach(pair => {
+        tempCards.push({ pairId: pair.pairId, text: pair.front.text, img: pair.front.img });
+        tempCards.push({ pairId: pair.pairId, text: pair.back.text, img: pair.back.img });
+      });
+      return shuffle(tempCards);
+    }
 
     function shuffle(array) {
       for (let i = array.length - 1; i > 0; i--) {
@@ -298,61 +270,35 @@
       return array;
     }
 
-    function createCards() {
-      cards = [];
-      pairsData.forEach(pair => {
-        cards.push({ ...pair.front, pairId: pair.pairId, type: 'front' });
-        cards.push({ ...pair.back, pairId: pair.pairId, type: 'back' });
-      });
-      shuffle(cards);
-    }
-
-    function createCardElement(cardData) {
+    function createCardElement(cardData, index) {
       const card = document.createElement('div');
       card.classList.add('card');
       card.dataset.pairId = cardData.pairId;
-      card.dataset.type = cardData.type;
+      card.dataset.index = index;
 
-      const cardInner = document.createElement('div');
-      cardInner.classList.add('card-inner');
+      const isSmaller = smallerImages.includes(cardData.img.split('/').pop());
+      const backClass = isSmaller ? 'card-back smaller' : 'card-back';
 
-      const front = document.createElement('div');
-      front.classList.add('card-front');
-      if (cardData.img) {
-        const img = document.createElement('img');
-        img.src = cardData.img;
-        img.alt = cardData.text;
-        front.appendChild(img);
-      }
-      const frontText = document.createElement('div');
-      frontText.textContent = cardData.text;
-      front.appendChild(frontText);
+      card.innerHTML = `
+        <div class="card-inner">
+          <div class="card-front">
+            <img src="assets/logo.png" alt="Logo">
+          </div>
+          <div class="${backClass}">
+            <img src="${cardData.img}" alt="${cardData.text}" />
+            <div>${cardData.text}</div>
+          </div>
+        </div>
+      `;
 
-      const back = document.createElement('div');
-      back.classList.add('card-back');
-      if (cardData.img && smallerImages.includes(cardData.img.split('/').pop())) {
-        // Smaller back image
-        const img = document.createElement('img');
-        img.src = cardData.img;
-        img.alt = cardData.text;
-        back.appendChild(img);
-      }
-      const backText = document.createElement('div');
-      backText.textContent = cardData.text;
-      back.appendChild(backText);
-
-      cardInner.appendChild(front);
-      cardInner.appendChild(back);
-      card.appendChild(cardInner);
-
-      card.addEventListener('click', () => handleCardClick(card));
-
+      card.addEventListener('click', () => flipCard(card));
       return card;
     }
 
-    function handleCardClick(card) {
+    function flipCard(card) {
       if (flippedCards.length === 2 || card.classList.contains('flipped')) return;
 
+      // Start timer on first card flip
       if (!gameStarted) {
         startTimer();
         gameStarted = true;
@@ -360,150 +306,140 @@
 
       card.classList.add('flipped');
       flippedCards.push(card);
+      moves++;
+      movesSpan.textContent = moves;
 
       if (flippedCards.length === 2) {
-        moves++;
-        updateTimerMoves();
-        const [card1, card2] = flippedCards;
-        if (
-          card1.dataset.pairId === card2.dataset.pairId &&
-          card1.dataset.type !== card2.dataset.type
-        ) {
-          matchedPairs++;
-          flippedCards = [];
-          if (matchedPairs === totalPairs) {
-            endGame();
-          }
-        } else {
-          setTimeout(() => {
-            card1.classList.remove('flipped');
-            card2.classList.remove('flipped');
-            flippedCards = [];
-          }, 1200);
-        }
+        checkMatch();
       }
     }
 
-    function updateTimerMoves() {
-      timerMovesDisplay.textContent = `Time: ${timer} s | Moves: ${moves}`;
+    function checkMatch() {
+      const [card1, card2] = flippedCards;
+      if (card1.dataset.pairId === card2.dataset.pairId) {
+        matchedPairs++;
+        flippedCards = [];
+        if (matchedPairs === totalPairs) {
+          endGame();
+        }
+      } else {
+        setTimeout(() => {
+          card1.classList.remove('flipped');
+          card2.classList.remove('flipped');
+          flippedCards = [];
+        }, 1200);
+      }
+    }
+
+    function setupGame() {
+      matchedPairs = 0;
+      message.textContent = "";
+      gameBoard.innerHTML = "";
+      cards = prepareCards();
+      cards.forEach((cardData, index) => {
+        const card = createCardElement(cardData, index);
+        gameBoard.appendChild(card);
+      });
+      resetTimerAndMoves();
+      submitBtn.disabled = true;
+      gameStarted = false;
     }
 
     function startTimer() {
       timerInterval = setInterval(() => {
         timer++;
-        updateTimerMoves();
+        timerSpan.textContent = timer;
       }, 1000);
     }
 
-    function stopTimer() {
+    function resetTimerAndMoves() {
       clearInterval(timerInterval);
-    }
-
-    function resetGame() {
-      stopTimer();
       timer = 0;
       moves = 0;
-      gameStarted = false;
-      matchedPairs = 0;
-      updateTimerMoves();
-      message.textContent = '';
-      submitForm.style.display = 'none';
-      playerNameInput.value = '';
-      storeNameInput.value = '';
-      gameBoard.innerHTML = '';
-      createCards();
-      cards.forEach(cardData => {
-        const cardElement = createCardElement(cardData);
-        gameBoard.appendChild(cardElement);
-      });
-    }
-
-    function calculatePoints(moves, time) {
-      // Simple example: max 100 points - 2 points per move - 1 point per second, min 0
-      let points = 100 - moves * 2 - time;
-      if (points < 0) points = 0;
-      return points;
+      timerSpan.textContent = timer;
+      movesSpan.textContent = moves;
     }
 
     function endGame() {
-      stopTimer();
-      message.textContent = `You completed the game in ${timer} seconds with ${moves} moves!`;
-      submitForm.style.display = 'flex';
+      clearInterval(timerInterval);
+      message.textContent = "🎉 Congratulations! You matched all customers to their insurance needs!";
+      submitBtn.disabled = false;
     }
 
-    submitForm.addEventListener('submit', e => {
-      e.preventDefault();
-      const name = playerNameInput.value.trim();
-      const store = storeNameInput.value.trim();
+    function calculatePoints(time, moves) {
+      // Higher points for lower time and moves (example formula)
+      return Math.max(0, Math.round(10000 / ((time * moves) + 1)));
+    }
 
-      if (!name || !store) {
-        alert('Please enter both your name and store.');
-        return;
-      }
+    function showSubmitForm() {
+      const playerName = prompt("Congrats! Enter your name for the leaderboard:");
+      if (!playerName || playerName.trim() === "") return;
 
-      const points = calculatePoints(moves, timer);
+      const storeName = prompt("Enter your Store name:");
+      if (!storeName || storeName.trim() === "") return;
 
-      const data = {
-        name,
-        store,
-        moves,
-        time: timer,
-        points,
-      };
+      const points = calculatePoints(timer, moves);
 
-      // Replace this with your actual Apps Script Web App URL
-      const scriptURL = 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec';
+      sendScore(playerName.trim(), storeName.trim(), timer, moves, points);
+    }
 
-      fetch(scriptURL, {
+    function sendScore(name, store, time, moves, points) {
+      fetch(WEB_APP_URL, { https://script.google.com/macros/s/AKfycbyz_b-kJYEOu7QldtNKN3Q1zaWOBQklTzBb_apg6ekXNpsbmjHgn4ijExAy2QS7hBRKjQ/exec
         method: 'POST',
-        mode: 'no-cors',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(data)
-      }).then(() => {
-        message.textContent = `Thanks ${name}! Your score has been submitted.`;
-        submitForm.style.display = 'none';
-      }).catch(() => {
-        alert('Error submitting score. Please try again.');
-      });
-    });
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({name, store, time, moves, points})
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === 'success') {
+          alert('Score submitted! Check the leaderboard.');
+        } else {
+          alert('Error submitting score: ' + data.message);
+        }
+      })
+      .catch(err => alert('Failed to submit score: ' + err.message));
+    }
 
-    showLeaderboardBtn.addEventListener('click', () => {
-      // Replace with your Google Apps Script Web App URL (same as for submit)
-      const scriptURL = https://script.google.com/macros/s/AKfycbwegOLFu7OblOk8Qge7TJ9FxHyuxzoAyI9HZ7DFWCV6a0vqFtKaD02KUsJx20bEDDC9KA/exec;
-
-      fetch(scriptURL)
-        .then(response => response.json())
+    function showLeaderboard() {
+      fetch(WEB_APP_URL)
+        .then(res => res.json())
         .then(data => {
-          leaderboardTableBody.innerHTML = ''; // Clear old rows
-          data.forEach((entry, index) => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-              <td>${index + 1}</td>
-              <td>${entry.name}</td>
-              <td>${entry.store}</td>
-              <td>${entry.moves}</td>
-              <td>${entry.time}</td>
-              <td>${entry.points}</td>
-            `;
-            leaderboardTableBody.appendChild(row);
+          let leaderboardHtml = '<h2>Leaderboard - Top 10</h2><ol>';
+          data.forEach(item => {
+            leaderboardHtml += `<li><strong>${item.name}</strong> (${item.store}) - Time: ${item.time}s - Moves: ${item.moves} - Points: ${item.points}</li>`;
           });
-          leaderboardModal.style.display = 'block';
+          leaderboardHtml += '</ol>';
+          showModal(leaderboardHtml);
         })
         .catch(() => {
-          alert('Could not load leaderboard. Please try again later.');
+          alert('Failed to load leaderboard.');
         });
+    }
+
+    function showModal(content) {
+      const modal = document.getElementById('modal');
+      const modalBody = document.getElementById('modal-body');
+      modalBody.innerHTML = content;
+      modal.style.display = 'flex';
+    }
+
+    function closeModal() {
+      const modal = document.getElementById('modal');
+      modal.style.display = 'none';
+    }
+
+    // Event listeners
+    resetBtn.addEventListener('click', setupGame);
+    submitBtn.addEventListener('click', showSubmitForm);
+    leaderboardBtn.addEventListener('click', showLeaderboard);
+    document.getElementById('modal-close').addEventListener('click', closeModal);
+    window.addEventListener('click', e => {
+      const modal = document.getElementById('modal');
+      if (e.target === modal) closeModal();
     });
 
-    closeLeaderboardBtn.addEventListener('click', () => {
-      leaderboardModal.style.display = 'none';
-    });
-
-    resetBtn.addEventListener('click', resetGame);
-
-    // Initialize game on load
-    resetGame();
+    // Initialize
+    setupGame();
   </script>
 </body>
 </html>
