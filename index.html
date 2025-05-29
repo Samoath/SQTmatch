@@ -6,9 +6,6 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="Feature Match" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="theme-color" content="#bb3a2a" />
-  <link rel="manifest" href="manifest.json" />
   <title>Feature Match: Match the benefits to the customer</title>
   <style>
     body {
@@ -21,19 +18,12 @@
       min-height: 100vh;
       margin: 0;
       padding: 20px;
+      text-align: center;
     }
-
     h1 {
       color: #000000;
       text-align: center;
     }
-
-    #stats {
-      font-size: 18px;
-      color: #000;
-      margin-top: 10px;
-    }
-
     #game-board {
       display: grid;
       grid-template-columns: repeat(4, 160px);
@@ -41,7 +31,6 @@
       grid-gap: 20px;
       margin-top: 20px;
     }
-
     .card {
       width: 160px;
       height: 140px;
@@ -52,7 +41,6 @@
       perspective: 1000px;
       border: 2px solid white;
     }
-
     .card-inner {
       position: relative;
       width: 100%;
@@ -61,12 +49,10 @@
       transition: transform 0.6s;
       transform-style: preserve-3d;
     }
-
     .card.flipped .card-inner {
       transform: rotateY(180deg);
       cursor: default;
     }
-
     .card-front,
     .card-back {
       position: absolute;
@@ -83,18 +69,15 @@
       box-sizing: border-box;
       color: white;
     }
-
     .card-front {
       background-color: #ff7b67;
       border: 2px solid white;
     }
-
     .card-front img {
       max-width: 100px;
       max-height: 40px;
       object-fit: contain;
     }
-
     .card-back {
       background-color: #ff7b67;
       border: 2px solid white;
@@ -102,15 +85,15 @@
       font-size: 12px;
       line-height: 1.3;
       text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
       padding: 10px 8px;
       box-sizing: border-box;
+      color: white;
       height: 100%;
-      display: flex !important;
-      flex-direction: column !important;
-      justify-content: flex-start !important;
-      align-items: center !important;
     }
-
     .card-back img {
       width: 100%;
       height: auto;
@@ -120,11 +103,6 @@
       border-radius: 8px;
       flex-shrink: 0;
     }
-
-    .card-back.smaller img {
-      transform: scale(0.4);
-    }
-
     #reset-btn {
       margin-top: 30px;
       padding: 10px 20px;
@@ -135,24 +113,56 @@
       font-size: 16px;
       cursor: pointer;
     }
-
     #message {
       margin-top: 20px;
       font-size: 20px;
       color: green;
       text-align: center;
     }
+    #stats {
+      margin-top: 15px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+    #submit-form {
+      margin-top: 20px;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+    }
+    #submit-form input {
+      padding: 8px;
+      margin: 5px 0;
+      font-size: 16px;
+      width: 200px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+    #submit-form button {
+      padding: 10px 20px;
+      margin-top: 10px;
+      font-size: 16px;
+      background-color: #000000;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
   <h1>Feature Match: Match the benefits to the customer</h1>
-  <div id="stats">
-    <span id="timer">Time: 0s</span> |
-    <span id="moves">Moves: 0</span>
-  </div>
+  <div id="stats">Moves: 0 | Time: 0s</div>
   <div id="game-board"></div>
   <button id="reset-btn">Restart Game</button>
   <div id="message"></div>
+
+  <form id="submit-form">
+    <h2>Submit your score</h2>
+    <input type="text" id="playerName" placeholder="Your Name" required />
+    <input type="text" id="storeName" placeholder="Store Name" required />
+    <button type="submit">Submit Score</button>
+  </form>
 
   <script>
     const smallerImages = ['ndr2.png', 'wwc2.png', 'acc2.png', 'scr2.png', 'lat2.png', 'ext2.png'];
@@ -192,14 +202,18 @@
     let cards = [];
     let flippedCards = [];
     let matchedPairs = 0;
-    let moves = 0;
-    let timerInterval = null;
-    let secondsElapsed = 0;
-    let gameStarted = false;
     const totalPairs = pairsData.length;
     const gameBoard = document.getElementById('game-board');
     const message = document.getElementById('message');
     const resetBtn = document.getElementById('reset-btn');
+    const stats = document.getElementById('stats');
+    const submitForm = document.getElementById('submit-form');
+    const playerNameInput = document.getElementById('playerName');
+    const storeNameInput = document.getElementById('storeName');
+
+    let moves = 0;
+    let startTime = null;
+    let timerInterval = null;
 
     function prepareCards() {
       let tempCards = [];
@@ -246,16 +260,15 @@
     function flipCard(card) {
       if (flippedCards.length === 2 || card.classList.contains('flipped')) return;
 
-      if (!gameStarted) {
-        gameStarted = true;
-        timerInterval = setInterval(() => {
-          secondsElapsed++;
-          document.getElementById('timer').textContent = `Time: ${secondsElapsed}s`;
-        }, 1000);
+      if (startTime === null) {
+        startTimer();
       }
 
       card.classList.add('flipped');
       flippedCards.push(card);
+
+      moves++;
+      updateStats();
 
       if (flippedCards.length === 2) {
         checkMatch();
@@ -264,15 +277,14 @@
 
     function checkMatch() {
       const [card1, card2] = flippedCards;
-      moves++;
-      document.getElementById('moves').textContent = `Moves: ${moves}`;
-
       if (card1.dataset.pairId === card2.dataset.pairId) {
         matchedPairs++;
         flippedCards = [];
+
         if (matchedPairs === totalPairs) {
-          clearInterval(timerInterval);
-          message.textContent = `🎉 Congratulations! You matched all customers to their insurance needs in ${moves} moves and ${secondsElapsed} seconds!`;
+          stopTimer();
+          message.textContent = "🎉 Congratulations! You matched all customers to their insurance needs!";
+          showSubmitForm();
         }
       } else {
         setTimeout(() => {
@@ -286,14 +298,14 @@
     function setupGame() {
       matchedPairs = 0;
       moves = 0;
-      secondsElapsed = 0;
-      gameStarted = false;
+      startTime = null;
       clearInterval(timerInterval);
-
+      timerInterval = null;
       message.textContent = "";
-      document.getElementById('timer').textContent = "Time: 0s";
-      document.getElementById('moves').textContent = "Moves: 0";
-
+      submitForm.style.display = 'none';
+      playerNameInput.value = '';
+      storeNameInput.value = '';
+      stats.textContent = `Moves: 0 | Time: 0s`;
       gameBoard.innerHTML = "";
       cards = prepareCards();
       cards.forEach((cardData, index) => {
@@ -302,7 +314,71 @@
       });
     }
 
+    function updateStats() {
+      const elapsed = startTime ? Math.floor((Date.now() - startTime) / 1000) : 0;
+      stats.textContent = `Moves: ${moves} | Time: ${elapsed}s`;
+    }
+
+    function startTimer() {
+      startTime = Date.now();
+      timerInterval = setInterval(updateStats, 1000);
+    }
+
+    function stopTimer() {
+      clearInterval(timerInterval);
+      timerInterval = null;
+    }
+
+    function showSubmitForm() {
+      submitForm.style.display = 'flex';
+    }
+
+    // Points calculation: base 1000 - (moves * 10) - (time in seconds * 5), min 0 points
+    function calculatePoints(moves, time) {
+      const points = Math.max(0, 1000 - (moves * 10) - (time * 5));
+      return points;
+    }
+
+    submitForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const playerName = playerNameInput.value.trim();
+      const storeName = storeNameInput.value.trim();
+      const elapsed = Math.floor((Date.now() - startTime) / 1000);
+
+      if (!playerName || !storeName) {
+        alert('Please enter your name and store.');
+        return;
+      }
+
+      const points = calculatePoints(moves, elapsed);
+
+      // Replace this with your actual Google Apps Script Web App URL:
+      const scriptURL = 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec';
+
+      fetch(scriptURL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: playerName,
+          store: storeName,
+          moves: moves,
+          time: elapsed,
+          points: points
+        })
+      })
+        .then(() => {
+          message.textContent = `Thanks, ${playerName}! Your score of ${points} points has been submitted.`;
+          submitForm.style.display = 'none';
+        })
+        .catch(() => {
+          alert('Oops! There was an error submitting your score.');
+        });
+    });
+
     resetBtn.addEventListener('click', setupGame);
+
     setupGame();
   </script>
 </body>
