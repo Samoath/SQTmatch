@@ -384,21 +384,32 @@
       sendScore(playerName.trim(), storeName.trim(), timer, moves, points);
     }
 
-    function sendScore(name, store, time, moves, points) {
-      fetch(WEB_APP_URL, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({name, store, time, moves, points})
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.status === 'success') {
-          alert('Score submitted! Check the leaderboard.');
-        } else {
-          alert('Error submitting score: ' + data.message);
-        }
-      })
-      .catch(err => alert('Failed to submit score: ' + err.message));
+    function sendScore(Name, Store, Time, Moves, Points) {
+     fetch(WEB_APP_URL, {
+  method: 'POST',
+  mode: 'no-cors', // optional: see notes below
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    name: playerName,
+    store: playerStore,
+    time: timeTaken,
+    moves: moveCount,
+    points: points
+  })
+})
+.then(response => response.json())
+.then(data => {
+  if (data.status === 'success') {
+    console.log('Score submitted successfully!');
+  } else {
+    console.error('Submit error:', data.message);
+  }
+})
+.catch(error => {
+  console.error('Failed to submit score:', error);
+});
     }
 
     function showLeaderboard() {
