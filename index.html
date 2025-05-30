@@ -4,18 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 
-  <!-- iOS support -->
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-title" content="Feature Match" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-
-  <!-- Android support -->
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="theme-color" content="#bb3a2a" />
-
-  <!-- Manifest -->
-  <link rel="manifest" href="manifest.json" />
-
   <title>Feature Match: Match the benefits to the customer</title>
 
   <style>
@@ -198,264 +186,266 @@
     </div>
   </div>
 
-  <script>
-    const smallerImages = ['ndr2.png', 'wwc2.png', 'acc2.png', 'scr2.png', 'lat2.png', 'ext2.png'];
-    const pairsData = [
-      {
-        pairId: 1,
-        front: { text: "Next day replacement", img: "assets/ndr1.png" },
-        back: { text: "Jess is a beautician who uses her phone to book and check her customer's appointments", img: "assets/ndr2.png" }
-      },
-      {
-        pairId: 2,
-        front: { text: "Worldwide cover", img: "assets/wwc1.png" },
-        back: { text: "Sarah loves travelling, when travelling her phone is her bank card and her boarding pass", img: "assets/wwc2.png" }
-      },
-      {
-        pairId: 3,
-        front: { text: "£300 of accessories included when purchased at the same time", img: "assets/acc1.png" },
-        back: { text: "Pete is always on the go, and is always wearing his Apple watch and Airpods", img: "assets/acc2.png" }
-      },
-      {
-        pairId: 4,
-        front: { text: "Unlimited £25 screen replacements", img: "assets/scr1.png" },
-        back: { text: "George's 5 year old son loves watching YouTube videos on George's phone and iPad", img: "assets/scr2.png" }
-      },
-      {
-        pairId: 5,
-        front: { text: "Loss and theft cover", img: "assets/lat1.png" },
-        back: { text: "Harry is a delivery driver and his work often takes him to different cities including London", img: "assets/lat2.png" }
-      },
-      {
-        pairId: 6,
-        front: { text: "Extended warranty", img: "assets/ext1.png" },
-        back: { text: "Paula shops in store because she likes peace of mind, she wants to keep her phone for as long as possible", img: "assets/ext2.png" }
-      }
-    ];
-
-    let cards = [];
-    let flippedCards = [];
-    let matchedPairs = 0;
-    const totalPairs = pairsData.length;
-    const gameBoard = document.getElementById('game-board');
-    const message = document.getElementById('message');
-    const resetBtn = document.getElementById('reset-btn');
-    const submitBtn = document.getElementById('submit-btn');
-    const leaderboardBtn = document.getElementById('leaderboard-btn');
-    const timerSpan = document.getElementById('timer');
-    const movesSpan = document.getElementById('moves');
-
-    let timer = 0;
-    let timerInterval = null;
-    let moves = 0;
-    let gameStarted = false;
-
-    // Your deployed Google Apps Script Web App URL here:
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyz_b-kJYEOu7QldtNKN3Q1zaWOBQklTzBb_apg6ekXNpsbmjHgn4ijExAy2QS7hBRKjQ/exec";
-
-
-    function prepareCards() {
-      let tempCards = [];
-      pairsData.forEach(pair => {
-        tempCards.push({ pairId: pair.pairId, text: pair.front.text, img: pair.front.img });
-        tempCards.push({ pairId: pair.pairId, text: pair.back.text, img: pair.back.img });
-      });
-      return shuffle(tempCards);
+<script>
+  const pairsData = [
+    {
+      pairId: 1,
+      front: { text: "Next day replacement", img: "assets/ndr1.png" },
+      back: { text: "Jess is a beautician who uses her phone to book and check her customer's appointments", img: "assets/ndr2.png" }
+    },
+    {
+      pairId: 2,
+      front: { text: "Worldwide cover", img: "assets/wwc1.png" },
+      back: { text: "Sarah loves travelling, when travelling her phone is her bank card and her boarding pass", img: "assets/wwc2.png" }
+    },
+    {
+      pairId: 3,
+      front: { text: "£300 of accessories included when purchased at the same time", img: "assets/acc1.png" },
+      back: { text: "Pete is always on the go, and is always wearing his Apple watch and Airpods", img: "assets/acc2.png" }
+    },
+    {
+      pairId: 4,
+      front: { text: "Unlimited £25 screen replacements", img: "assets/scr1.png" },
+      back: { text: "George's 5 year old son loves watching YouTube videos on George's phone and iPad", img: "assets/scr2.png" }
+    },
+    {
+      pairId: 5,
+      front: { text: "Loss and theft cover", img: "assets/lat1.png" },
+      back: { text: "Harry is a delivery driver and his work often takes him to different cities including London", img: "assets/lat2.png" }
+    },
+    {
+      pairId: 6,
+      front: { text: "Extended warranty", img: "assets/ext1.png" },
+      back: { text: "Paula shops in store because she likes peace of mind, she wants to keep her phone for as long as possible", img: "assets/ext2.png" }
     }
+  ];
 
-    function shuffle(array) {
-      for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-      }
-      return array;
+  const gameBoard = document.getElementById('game-board');
+  const message = document.getElementById('message');
+  const resetBtn = document.getElementById('reset-btn');
+  const submitBtn = document.getElementById('submit-btn');
+  const leaderboardBtn = document.getElementById('leaderboard-btn');
+  const timerSpan = document.getElementById('timer');
+  const movesSpan = document.getElementById('moves');
+  const modal = document.getElementById('modal');
+  const modalBody = document.getElementById('modal-body');
+  const modalClose = document.getElementById('modal-close');
+
+  let cards = [];
+  let flippedCards = [];
+  let matchedPairs = 0;
+  const totalPairs = pairsData.length;
+
+  let timer = 0;
+  let timerInterval = null;
+  let moves = 0;
+  let gameStarted = false;
+
+  // Replace with your actual deployed Apps Script Web App URL:
+  const WEB_APP_URL = "https://script.google.com/macros/s/YOUR_DEPLOYED_SCRIPT_ID/exec";
+
+  function prepareCards() {
+    let tempCards = [];
+    pairsData.forEach(pair => {
+      tempCards.push({ pairId: pair.pairId, text: pair.front.text, img: pair.front.img });
+      tempCards.push({ pairId: pair.pairId, text: pair.back.text, img: pair.back.img });
+    });
+    return shuffle(tempCards);
+  }
+
+  function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
     }
+    return array;
+  }
 
-    function createCardElement(cardData, index) {
-      const card = document.createElement('div');
-      card.classList.add('card');
-      card.dataset.pairId = cardData.pairId;
-      card.dataset.index = index;
+  function createCardElement(cardData, index) {
+    const card = document.createElement('div');
+    card.classList.add('card');
+    card.dataset.pairId = cardData.pairId;
+    card.dataset.index = index;
 
-      const isSmaller = smallerImages.includes(cardData.img.split('/').pop());
-      const backClass = isSmaller ? 'card-back smaller' : 'card-back';
-
-      card.innerHTML = `
-        <div class="card-inner">
-          <div class="card-front">
-            <img src="assets/logo.png" alt="Logo">
-          </div>
-          <div class="${backClass}">
-            <img src="${cardData.img}" alt="${cardData.text}" />
-            <div>${cardData.text}</div>
-          </div>
+    card.innerHTML = `
+      <div class="card-inner">
+        <div class="card-front">
+          <img src="assets/logo.png" alt="Logo">
         </div>
-      `;
+        <div class="card-back">
+          <img src="${cardData.img}" alt="${cardData.text}" />
+          <div>${cardData.text}</div>
+        </div>
+      </div>
+    `;
 
-      card.addEventListener('click', () => flipCard(card));
-      return card;
-    }
+    card.addEventListener('click', () => flipCard(card));
+    return card;
+  }
 
-    function flipCard(card) {
-      if (flippedCards.length === 2 || card.classList.contains('flipped')) return;
+  function flipCard(card) {
+    if (!gameStarted) startTimer();
+    if (flippedCards.length >= 2 || card.classList.contains('flipped')) return;
 
-      // Start timer on first card flip
-      if (!gameStarted) {
-        startTimer();
-        gameStarted = true;
-      }
+    card.classList.add('flipped');
+    flippedCards.push(card);
 
-      card.classList.add('flipped');
-      flippedCards.push(card);
+    if (flippedCards.length === 2) {
       moves++;
       movesSpan.textContent = moves;
-
-      if (flippedCards.length === 2) {
-        checkMatch();
-      }
+      checkForMatch();
     }
+  }
 
-    function checkMatch() {
-      const [card1, card2] = flippedCards;
-      if (card1.dataset.pairId === card2.dataset.pairId) {
-        matchedPairs++;
+  function checkForMatch() {
+    const [card1, card2] = flippedCards;
+    if (card1.dataset.pairId === card2.dataset.pairId) {
+      matchedPairs++;
+      flippedCards = [];
+
+      if (matchedPairs === totalPairs) {
+        endGame();
+      }
+    } else {
+      setTimeout(() => {
+        card1.classList.remove('flipped');
+        card2.classList.remove('flipped');
         flippedCards = [];
-        if (matchedPairs === totalPairs) {
-          endGame();
-        }
-      } else {
-        setTimeout(() => {
-          card1.classList.remove('flipped');
-          card2.classList.remove('flipped');
-          flippedCards = [];
-        }, 1200);
-      }
-    }
-
-    function setupGame() {
-      matchedPairs = 0;
-      message.textContent = "";
-      gameBoard.innerHTML = "";
-      cards = prepareCards();
-      cards.forEach((cardData, index) => {
-        const card = createCardElement(cardData, index);
-        gameBoard.appendChild(card);
-      });
-      resetTimerAndMoves();
-      submitBtn.disabled = true;
-      gameStarted = false;
-    }
-
-    function startTimer() {
-      timerInterval = setInterval(() => {
-        timer++;
-        timerSpan.textContent = timer;
       }, 1000);
     }
-
-    function resetTimerAndMoves() {
-      clearInterval(timerInterval);
-      timer = 0;
-      moves = 0;
-      timerSpan.textContent = timer;
-      movesSpan.textContent = moves;
-    }
-
-    function endGame() {
-      clearInterval(timerInterval);
-      message.textContent = "🎉 Congratulations! You matched all customers to their insurance needs!";
-      submitBtn.disabled = false;
-    }
-
-    function calculatePoints(time, moves) {
-      // Higher points for lower time and moves (example formula)
-      return Math.max(0, Math.round(10000 / ((time * moves) + 1)));
-    }
-
-    function showSubmitForm() {
-  const playerName = prompt("Congrats! Enter your name for the leaderboard:");
-  if (!playerName || playerName.trim() === "") return;
-
-  const storeName = prompt("Enter your Store name:");
-  if (!storeName || storeName.trim() === "") return;
-
-  const points = calculatePoints(timer, moves);
-
-  sendScore(playerName.trim(), storeName.trim(), timer, moves, points);
-}
-
-    function sendScore(name, store, timer, moves, points) {
-  console.log("Submitting score:", { name, store, timer, moves, points });
-
-fetch(WEB_APP_URL, {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/x-www-form-urlencoded'
-  },
-  body: new URLSearchParams({
-    name: name,
-    store: store,
-    time: timer,
-    moves: moves,
-    points: points
-  })
-});
-
-.then(response => response.json())
-.then(data => {
-  if (data.status === 'success') {
-    alert('Score submitted!');
-  } else {
-    alert('Submission error: ' + data.message);
   }
-})
-.catch(err => {
-  console.error('Failed to submit score:', err);
-  alert('Failed to submit score');
-});
 
-}
+  function startTimer() {
+    gameStarted = true;
+    timerInterval = setInterval(() => {
+      timer++;
+      timerSpan.textContent = timer;
+    }, 1000);
+  }
 
-    function showLeaderboard() {
-      fetch(WEB_APP_URL)
-        .then(res => res.json())
-        .then(data => {
-          let leaderboardHtml = '<h2>Leaderboard - Top 10</h2><ol>';
-          data.forEach(item => {
-            leaderboardHtml += `<li><strong>${item.name}</strong> (${item.store}) - Time: ${item.time}s - Moves: ${item.moves} - Points: ${item.points}</li>`;
-          });
-          leaderboardHtml += '</ol>';
-          showModal(leaderboardHtml);
-        })
-        .catch(() => {
-          alert('Failed to load leaderboard.');
-        });
+  function stopTimer() {
+    clearInterval(timerInterval);
+  }
+
+  function endGame() {
+    stopTimer();
+    message.textContent = `Congratulations! You finished in ${timer} seconds with ${moves} moves.`;
+    submitBtn.disabled = false;
+  }
+
+  function resetGame() {
+    stopTimer();
+    timer = 0;
+    moves = 0;
+    matchedPairs = 0;
+    gameStarted = false;
+    timerSpan.textContent = timer;
+    movesSpan.textContent = moves;
+    message.textContent = '';
+    submitBtn.disabled = true;
+    flippedCards = [];
+
+    cards = prepareCards();
+    gameBoard.innerHTML = '';
+    cards.forEach((cardData, index) => {
+      const cardEl = createCardElement(cardData, index);
+      gameBoard.appendChild(cardEl);
+    });
+  }
+
+  resetBtn.addEventListener('click', resetGame);
+
+  submitBtn.addEventListener('click', () => {
+    let playerName = prompt("Please enter your name for the leaderboard:");
+    if (playerName === null) return;
+    playerName = playerName.trim();
+    if (!playerName) {
+      alert("Name cannot be empty.");
+      return;
     }
 
-    function showModal(content) {
-      const modal = document.getElementById('modal');
-      const modalBody = document.getElementById('modal-body');
-      modalBody.innerHTML = content;
-      modal.style.display = 'flex';
-    }
+    submitBtn.disabled = true;
+    message.textContent = "Submitting your score...";
 
-    function closeModal() {
-      const modal = document.getElementById('modal');
+    const params = new URLSearchParams();
+    params.append('action', 'submitScore');
+    params.append('playerName', playerName);
+    params.append('time', timer);
+    params.append('moves', moves);
+    params.append('score', timer + moves);
+
+    fetch(WEB_APP_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+      },
+      body: params.toString()
+    })
+    .then(response => response.json())
+    .then(result => {
+      if (result.status === 'success') {
+        message.textContent = "Score submitted successfully!";
+        fetchLeaderboard();
+      } else {
+        throw new Error(result.message || "Failed to submit score");
+      }
+    })
+    .catch(error => {
+      message.textContent = "Error submitting score: " + error.message;
+      submitBtn.disabled = false;
+    });
+  });
+
+  leaderboardBtn.addEventListener('click', fetchLeaderboard);
+
+  async function fetchLeaderboard() {
+    message.textContent = "Loading leaderboard...";
+    try {
+      const url = `${WEB_APP_URL}?action=queryLeaderboard`;
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (data.status === 'success') {
+        showLeaderboardModal(data.leaderboard);
+        message.textContent = '';
+      } else {
+        throw new Error(data.message || "Failed to fetch leaderboard");
+      }
+    } catch (error) {
+      message.textContent = "Error fetching leaderboard: " + error.message;
+    }
+  }
+
+  function showLeaderboardModal(leaderboard) {
+    let html = '<h2>Leaderboard</h2><ol>';
+    leaderboard.forEach(entry => {
+      html += `<li><strong>${escapeHtml(entry.playerName)}</strong> — Time: ${entry.time}s, Moves: ${entry.moves}, Score: ${entry.score}</li>`;
+    });
+    html += '</ol>';
+    modalBody.innerHTML = html;
+    modal.style.display = 'flex';
+  }
+
+  modalClose.addEventListener('click', () => {
+    modal.style.display = 'none';
+  });
+
+  window.addEventListener('click', (event) => {
+    if (event.target === modal) {
       modal.style.display = 'none';
     }
+  });
 
-    // Event listeners
-    resetBtn.addEventListener('click', setupGame);
-    submitBtn.addEventListener('click', showSubmitForm);
-    leaderboardBtn.addEventListener('click', showLeaderboard);
-    document.getElementById('modal-close').addEventListener('click', closeModal);
-    window.addEventListener('click', e => {
-      const modal = document.getElementById('modal');
-      if (e.target === modal) closeModal();
+  function escapeHtml(text) {
+    if (!text) return '';
+    return text.replace(/[&<>"']/g, function (m) {
+      return {'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[m];
     });
+  }
 
-    // Initialize
-    setupGame();
-  </script>
+  // Start a new game immediately on load
+  resetGame();
+</script>
+
 </body>
 </html>
