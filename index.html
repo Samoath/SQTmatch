@@ -387,19 +387,20 @@
     function sendScore(name, store, timer, moves, points) {
   console.log("Submitting score:", { name, store, timer, moves, points });
 
- fetch(WEB_APP_URL, {
+fetch(WEB_APP_URL, {
   method: 'POST',
   headers: {
-    'Content-Type': 'application/json'
+    'Content-Type': 'application/x-www-form-urlencoded'
   },
-  body: JSON.stringify({
+  body: new URLSearchParams({
     name: name,
     store: store,
-    time: timer,   // Make sure this key matches what your Apps Script expects
+    time: timer,
     moves: moves,
     points: points
   })
-})
+});
+
 .then(response => response.json())
 .then(data => {
   if (data.status === 'success') {
